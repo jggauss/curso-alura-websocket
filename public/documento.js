@@ -1,11 +1,12 @@
-import { emitirTextoEditor, selecionarDocumento } from "./socket-front-documento.js"
+import { emitirTextoEditor, selecionarDocumento,emitirExcluirDocumento } from "./socket-front-documento.js"
 
 const parametros = new URLSearchParams(window.location.search)
 
 
 const nomeDocumento = parametros.get("nome")
-
 const tituloDocumento = document.getElementById("titulo-documento")
+const botaoExcluir = document.getElementById("excluir-documento")
+
 tituloDocumento.textContent = nomeDocumento || "Documento sem título"
 selecionarDocumento(nomeDocumento)
 
@@ -21,4 +22,17 @@ textEditor.addEventListener("keyup",()=>{
 function atualizaTextoEditor(texto){
     textEditor.value = texto
 }
-export {atualizaTextoEditor}
+
+botaoExcluir.addEventListener("click",()=>{
+    emitirExcluirDocumento(nomeDocumento)
+})
+
+function alertarERedirecionar(nome){
+    if(nome===nomeDocumento){
+        alert(`Documento ${nome} excluído`)
+        window.location.href="/"
+    
+    }
+}
+
+export {atualizaTextoEditor,alertarERedirecionar}

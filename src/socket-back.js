@@ -1,8 +1,25 @@
-import { atualizaDocumento, encontrarDocumento } from "./documentosDB.js"
+import { adicionarDocumento, atualizaDocumento, encontrarDocumento, exlcuirDocumento, obterDocumentos } from "./documentosDB.js"
 import io from "./servidor.js"
 io.on("connection",(socket)=>{
-    console.log('Um cliente se conectou '+socket.id)
     
+    socket.on("obter_documentos", async (devolverDocumentos)=>{
+        const documentos = await obterDocumentos()
+        console.log(documentos)
+        devolverDocumentos(documentos)
+    })
+    
+    socket.on("adicionar_documento",async(nome)=>{
+
+        const documentoExiste = (await encontrarDocumento(nome)) !== null
+        if(documentoExiste){
+            socket.emit("documento_existente",nome)
+        }else{
+            const resultado = await adicionarDocumento(nome)
+            if(resultado.acknowledged){
+                io.emit("adicionar_documento_interface",nome)
+            }
+            }
+    })
 
     socket.on('selecionar_documento', async(nomeDocumento,devolverTexto)=>{
         socket.join(nomeDocumento)
@@ -21,9 +38,17 @@ io.on("connection",(socket)=>{
         const atualizacao = await atualizaDocumento(nomeDocumento,texto)
         console.log(atualizacao)
          if(atualizacao.modifiedCount){
-
-             
              socket.to(nomeDocumento).emit("texto_editor_clientes",texto)
          }
     })
+
+    socket.on("excluir_documento",async(nome)=>{
+        const resultado = await exlcuirDocumento(nome)
+        if(resultado.deletedCount){
+            console.log("olha só que sucesso")
+            io.emit("excluir_documento-sucesso",nome)
+        }
+
+    })
+
 })
